@@ -1,6 +1,6 @@
 
 // *********************************************************
-// *            TelosTracker v3                            *
+// *            TelosTracker                               *
 // *                                                       *
 // *     Author: Kevin Quaintance                          *
 // *     Date:   7/25/2019                                 *
@@ -75,7 +75,7 @@ String stamp;
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 600000;
+const unsigned long PUBLISH_PERIOD = 598000; //598sec to adjust for some slip
 // force lastPublish to trigger immediately when loop starts
 long int lastPublish = -600000;
 
@@ -411,11 +411,11 @@ void displayInfo()
     Particle.publish("Altitude", String(altitude));
     Particle.publish("Speed (Knots)", String(speed));     
 	
-	  //Reset some variables
-	  fix = 0;
-	  sats = 0;
-	  vibr0 = 0;
-	  longitude = 0;
+	//Reset some variables
+	fix = 0;
+	sats = 0;
+	vibr0 = 0;
+	longitude = 0;
     lon = 0;
     latitude = 0;
     lat = 0;
@@ -434,7 +434,7 @@ void displayInfo()
         int curr = (((min*60)+sec)*1000);
         int nextint = trig - curr;
         int elapsed = PUBLISH_PERIOD - nextint;
-        lastPublish = now - (elapsed + 7000); //7000millis (7 secs) to adjust back a bit further
+        lastPublish = now - (elapsed + 4500); //4500millis (4.5 secs) to adjust back a bit further
         // delay(2000);
         // Particle.publish("rnd: ", String(rnd));
         // Particle.publish("trig: ", String(trig));
