@@ -434,7 +434,7 @@ void displayInfo()
         int curr = (((min*60)+sec)*1000);
         int nextint = trig - curr;
         int elapsed = PUBLISH_PERIOD - nextint;
-        lastPublish = now - (elapsed + 4500); //4500millis (4.5 secs) to adjust back a bit further
+        lastPublish = now - (elapsed + 3500); //3500millis (3.5 secs) to adjust back a bit further
         // delay(2000);
         // Particle.publish("rnd: ", String(rnd));
         // Particle.publish("trig: ", String(trig));
