@@ -75,7 +75,7 @@ String stamp;
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 598000; //598sec to adjust for some slip
+const unsigned long PUBLISH_PERIOD = 596500; //596.5sec to adjust for some slip
 // force lastPublish to trigger immediately when loop starts
 long int lastPublish = -600000;
 
