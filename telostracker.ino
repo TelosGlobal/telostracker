@@ -1,3 +1,4 @@
+
 // *********************************************************
 // *            TelosTracker                               *
 // *                                                       *
@@ -60,6 +61,8 @@ int temp3 = 0;
 int hum3  = 0;
 int temp4 = 0;
 int hum4  = 0;
+int fix  = 0;
+int sats  = 0;
 int longitude = 0;
 int lon = 0;
 int latitude = 0;
@@ -72,7 +75,7 @@ String stamp;
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 600000;
+const unsigned long PUBLISH_PERIOD = 598000; //598sec to adjust for some slip
 // force lastPublish to trigger immediately when loop starts
 long int lastPublish = -600000;
 
@@ -82,10 +85,16 @@ long int lastPublish = -600000;
 int issync = 0;
 
 // GPS config /////////////////////////////////////////////////
+#ifndef PARTICLE
+//SoftwareSerial mySerial(3, 2);
+#else
+USARTSerial& mySerial = Serial1;
+#endif
 
-// Defines serial port for GPS module (TX,RX)
-HardwareSerial mySerial = Serial1;
+// what's the name of the hardware serial port?
+//HardwareSerial mySerial Serial1;
 
+// Connect to the GPS on the hardware port
 Adafruit_GPS GPS(&mySerial);
 
 // Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
@@ -114,6 +123,8 @@ void setup() {
     Particle.variable("hum3", hum3);
     Particle.variable("temp4", temp4);
     Particle.variable("hum4", hum4);
+    Particle.variable("fix", fix);
+    Particle.variable("sats", sats);
     Particle.variable("longitude", longitude);
     Particle.variable("lon", lon);
     Particle.variable("latitude", latitude);
@@ -122,16 +133,16 @@ void setup() {
     Particle.variable("speed", speed);
     
     // Force a connect to the Cloud
-    if (Particle.connected() == false) {
-       Particle.connect();
-    }
+//    if (Particle.connected() == false) {
+//       Particle.connect();
+//    }
         
-   // Common-anode RGB LED connected to (R), (G), (B)
-   RGB.mirrorTo(B3, B2, B1, true);
+    // Common-anode RGB LED connected to (R), (G), (B)
+    RGB.mirrorTo(B3, B2, B1, true, true);
 
-   // We open up a serial port to monitor the sensor values
-   //Serial.begin(9600); 
-   //Serial.println("TelosTracker Initializing...");
+    // We open up a serial port to monitor the sensor values
+    //Serial.begin(9600); 
+    //Serial.println("TelosTracker Initializing...");
     Particle.publish("TelosTracker Initializing...", Time.timeStr());
     
     // Initiate Temp sensors
@@ -145,9 +156,14 @@ void setup() {
     pinMode(TILT, INPUT);
 
 // GPS setup ///////////////////////////////////////////////////////////////////////////
-  // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
+    // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
     GPS.begin(9600);
+    delay(1000);
 
+    //# request a HOT RESTART, in case we were in standby mode before.
+//    GPS.sendCommand("$PMTK101*32");
+//    delay(1000);
+    
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
     
@@ -170,7 +186,10 @@ void setup() {
   // loop code a heck of a lot easier!
     useInterrupt(true);
 
-    delay(1000);    
+    delay(1000);  
+    
+      // Ask for firmware version
+//    mySerial.println(PMTK_Q_RELEASE);
 }
 
 // Interrupt is called once a millisecond, looks for any new GPS data, and stores it
@@ -181,15 +200,15 @@ void handleSysTick(void* data) {
 #endif
   char c = GPS.read();
   // if you want to debug, this is a good time to do it!
-//  if (GPSECHO && c) {
-//  #ifdef UDR0
-//    UDR0 = c;
+  if (GPSECHO && c) {
+  #ifdef UDR0
+    UDR0 = c;
     // writing direct to UDR0 is much much faster than Serial.print
     // but only one character can be written at a time.
-//  #else
-//    Serial.write(c);
-//  #endif
-//  }
+  #else
+    Serial.write(c);
+  #endif
+  }
 }
 
 void useInterrupt(boolean v) {
@@ -213,11 +232,45 @@ void useInterrupt(boolean v) {
   #endif
 }
 
-uint32_t timer = millis();
+//uint32_t timer = millis();
+
 
 void loop() {
 
+  // in case you are not using the interrupt above, you'll
+  // need to 'hand query' the GPS, not suggested :(
+  if (! usingInterrupt) {
+    // read data from the GPS in the 'main loop'
+    char c = GPS.read();
+    // if you want to debug, this is a good time to do it!
+    if (GPSECHO)
+      if (c) Serial.print(c);
+  }
+
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences!
+    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
+    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+
+    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
+      return;  // we can fail to parse a sentence in which case we should just wait for another
+  }
+
+  // if millis() or timer wraps around, we'll just reset it
+//  if (timer > millis())  timer = millis();
+  
+
+//  delay(1000);
+
 // Populate GPS variables for publishing
+    if (GPS.fix > fix) {
+        fix = GPS.fix;
+    }
+    if (GPS.satellites > sats) {
+        sats = GPS.satellites;
+    }    
     if (GPS.latitude > latitude) {
         latitude = GPS.latitude;
     }
@@ -291,34 +344,7 @@ void loop() {
     temp4 = static_cast<int>(t4);
     hum4  = static_cast<int>(h4);
 
-  // in case you are not using the interrupt above, you'll
-  // need to 'hand query' the GPS, not suggested :(
-//  if (! usingInterrupt) {
-    // read data from the GPS in the 'main loop'
-//    char c = GPS.read();
-    // if you want to debug, this is a good time to do it!
-//    if (GPSECHO)
-//      if (c) Serial.print(c);
-//  }
 
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    // a tricky thing here is if we print the NMEA sentence, or data
-    // we end up not listening and catching other sentences!
-    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
-    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
-
-    if (!GPS.parse(GPS.lastNMEA())) {  // this also sets the newNMEAreceived() flag to false
-      speed = -8888;   // This will indicate no data was received
-      return;  // we can fail to parse a sentence in which case we should just wait for another
-    } 
-  else
-  {
-      speed = -9999;
-  }
-  
-  }
-  
 
 if (millis() - lastPublish >= PUBLISH_PERIOD) {
 	lastPublish = millis();
@@ -329,7 +355,10 @@ if (millis() - lastPublish >= PUBLISH_PERIOD) {
 if (Time.hour() == 0) {
     if (Time.minute() == 52) {
         if (Time.second() == 55) {
-            if (Particle.connected()) {
+            if (!Particle.connected()) {
+                Particle.connect();
+            }
+            delay(5000);
             // Request time synchronization from the Particle Device Cloud
             Particle.syncTime();
             // Wait until Electron receives time from Particle Device Cloud (or connection to Particle Device Cloud is lost)
@@ -337,9 +366,10 @@ if (Time.hour() == 0) {
             Particle.publish("Time Synced with Cloud.");
             //Publish daily vitals
             Particle.publishVitals(); 
+            
             //  Let's trigger a resync of the publishing
             issync = 0;
-            }
+            delay(2000);
         }
     }
 }    
@@ -369,16 +399,21 @@ void displayInfo()
     Particle.publish("Hum4", String(hum4));
     Particle.publish("Temp4", String(temp4)); 
     delay(2000);
-    Particle.publish("longitude", String(longitude));
-    Particle.publish("lon", String(lon));
+    Particle.publish("GPSfix", String(fix));
+    Particle.publish("SATs", String(sats));
     delay(2000); 
-    Particle.publish("latitude", String(latitude));
-    Particle.publish("lat", String(lat)); 
+    Particle.publish("Longitude", String(longitude));
+    Particle.publish("Lon", String(lon));
     delay(2000); 
-    Particle.publish("altitude", String(altitude));
-    Particle.publish("speed", String(speed));     
+    Particle.publish("Latitude", String(latitude));
+    Particle.publish("Lat", String(lat)); 
+    delay(2000); 
+    Particle.publish("Altitude", String(altitude));
+    Particle.publish("Speed (Knots)", String(speed));     
 	
 	//Reset some variables
+	fix = 0;
+	sats = 0;
 	vibr0 = 0;
 	longitude = 0;
     lon = 0;
@@ -399,7 +434,7 @@ void displayInfo()
         int curr = (((min*60)+sec)*1000);
         int nextint = trig - curr;
         int elapsed = PUBLISH_PERIOD - nextint;
-        lastPublish = now - (elapsed + 20000); //20000 to adjust back a bit further
+        lastPublish = now - (elapsed + 4500); //4500millis (4.5 secs) to adjust back a bit further
         // delay(2000);
         // Particle.publish("rnd: ", String(rnd));
         // Particle.publish("trig: ", String(trig));
@@ -424,6 +459,8 @@ long TP_init(){
 }
 
 // ***************ADAFRUITGPS*********************
+// Based on: https://github.com/adafruit/Adafruit_GPS/blob/master/examples/GPS_HardwareSerial_Parsing/GPS_HardwareSerial_Parsing.ino
+
 // These are random examples of how to access the GPS data
 
   // if millis() or timer wraps around, we'll just reset it
