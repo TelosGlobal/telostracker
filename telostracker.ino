@@ -1,4 +1,3 @@
-
 // *********************************************************
 // *            TelosTracker                               *
 // *                                                       *
@@ -22,6 +21,7 @@
 // This #include statement was automatically added by the Particle IDE.
 // This is the temp sensor library
 #include <Adafruit_DHT_Particle.h>
+
 
 // Setup the 5 temp/humidity sensors
 #define DHTPIN0 C4     // Onboard sensor
@@ -49,6 +49,7 @@ STARTUP(RGB.mirrorTo(B3, B2, B1));
 //Declare Particle Cloud Variables ///////////////////////////
 //These become accessible variables accessable 
 //via the Particle APIs
+bool pwr  = 0;
 int vibr  = 0;
 int vibr0 = 0;
 int temp0 = 0;
@@ -75,7 +76,7 @@ String stamp;
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 596500; //596.5sec to adjust for some slip
+const unsigned long PUBLISH_PERIOD = 597000; //597 sec to adjust for some slip
 // force lastPublish to trigger immediately when loop starts
 long int lastPublish = -600000;
 
@@ -106,11 +107,13 @@ Adafruit_GPS GPS(&mySerial);
 boolean usingInterrupt = false;
 void useInterrupt(boolean); // Func prototype keeps Arduino 0023 happy
 
+PMIC power;
 
 ////////////////////////////////////////////////////////////////
 void setup() {
 
 //  Register Cloud Variables with Particle Cloud
+    Particle.variable("pwr", pwr);    
     Particle.variable("stamp", stamp);
     Particle.variable("vibr0", vibr0);
     Particle.variable("temp0", temp0);
@@ -236,7 +239,11 @@ void useInterrupt(boolean v) {
 
 
 void loop() {
-
+    
+// Check if unit is getting good power
+  pwr = power.isPowerGood();
+    
+// GPS STUFF /////////////////////////////////////////////////////////////
   // in case you are not using the interrupt above, you'll
   // need to 'hand query' the GPS, not suggested :(
   if (! usingInterrupt) {
@@ -382,6 +389,7 @@ delay(1000);
 void displayInfo()
 {
     Particle.publish("Timestamp", Time.timeStr());
+    Particle.publish("Power", String(pwr));
     Particle.publish("Vibration", String(vibr0));
     delay(2000);
     Particle.publish("Hum0", String(hum0));
@@ -412,6 +420,7 @@ void displayInfo()
     Particle.publish("Speed (Knots)", String(speed));     
 	
 	//Reset some variables
+	pwr = 0;
 	fix = 0;
 	sats = 0;
 	vibr0 = 0;
