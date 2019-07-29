@@ -71,6 +71,7 @@ int lat = 0;
 int altitude = -1000;
 int speed = 0;
 String stamp;
+String location;
 
 // Setup for interval publishing /////////////////////////////
 
@@ -134,6 +135,7 @@ void setup() {
     Particle.variable("lat", lat);
     Particle.variable("altitude", altitude);
     Particle.variable("speed", speed);
+    Particle.variable("location", location);
     
     // Force a connect to the Cloud
 //    if (Particle.connected() == false) {
@@ -263,30 +265,30 @@ void loop() {
   }
 
 // Populate GPS variables for publishing
-    if (GPS.fix > fix) {
-        fix = GPS.fix;
-    }
-    if (GPS.satellites > sats) {
-        sats = GPS.satellites;
-    }    
-    if (GPS.latitude > latitude) {
-        latitude = GPS.latitude;
-    }
-    if (GPS.lat > lat) {
-        lat = GPS.lat;
-    }
-    if (GPS.longitude > longitude) {
-        longitude = GPS.longitude;
-    }
-    if (GPS.lon > lon) {
-        lon = GPS.lon;
-    }
-    if (GPS.altitude > altitude) {
-        altitude = GPS.altitude;
-    }
-    if (GPS.speed > speed) {
-        speed = GPS.speed;
-    }
+//    if (GPS.fix > fix) {
+//        fix = GPS.fix;
+//    }
+//    if (GPS.satellites > sats) {
+//        sats = GPS.satellites;
+//    }    
+//    if (GPS.latitude > latitude) {
+//        latitude = GPS.latitude;
+//    }
+//    if (GPS.lat > lat) {
+//        lat = GPS.lat;
+//    }
+//    if (GPS.longitude > longitude) {
+//        longitude = GPS.longitude;
+//    }
+//    if (GPS.lon > lon) {
+//        lon = GPS.lon;
+//    }
+//    if (GPS.altitude > altitude) {
+//        altitude = GPS.altitude;
+//    }
+//    if (GPS.speed > speed) {
+//        speed = GPS.speed;
+//    }
 
 //  Read tilt sensor
     long measurement =TP_init();
@@ -396,18 +398,25 @@ void displayInfo()
     Particle.publish("Hum4", String(hum4));
     Particle.publish("Temp4", String(temp4)); 
     delay(2000);
-    Particle.publish("GPSfix", String(fix));
-    Particle.publish("SATs", String(sats));
+    Particle.publish("GPSfix", String(GPS.fix));
+    Particle.publish("SATs", String(GPS.satellites));
     delay(2000); 
-    Particle.publish("Longitude", String(longitude));
-    Particle.publish("Lon", String(lon));
+    //Particle.publish("Lat", String(GPS.latitude + ));
+    //Particle.publish("Lon", String(GPS.longitude + GPS.lon));
+    Particle.publish("Latitude", String(GPS.latitude));
+    Particle.publish("Lat", String(GPS.lat)); 
     delay(2000); 
-    Particle.publish("Latitude", String(latitude));
-    Particle.publish("Lat", String(lat)); 
+    Particle.publish("Longitude", String(GPS.longitude));
+    Particle.publish("Lon", String(GPS.lon));
     delay(2000); 
-    Particle.publish("Altitude", String(altitude));
-    Particle.publish("Speed (Knots)", String(speed));
+    Particle.publish("Altitude", String(GPS.altitude));
+    Particle.publish("Speed (Knots)", String(GPS.speed));
     Particle.publish("Timestamp", Time.timeStr());
+	
+    String location = String::format(
+    "{\"LAT\":%f, \"LON\":%f}",
+    GPS.latitudeDegrees, GPS.longitudeDegrees);	
+    Particle.publish("Location", String(location));
 	
 	//Reset some variables
 	pwr = 0;
