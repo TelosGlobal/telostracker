@@ -76,7 +76,7 @@ String stamp;
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 597000; //597 sec to adjust for some slip
+const unsigned long PUBLISH_PERIOD = 600000; 
 // force lastPublish to trigger immediately when loop starts
 long int lastPublish = -600000;
 
@@ -443,7 +443,7 @@ void displayInfo()
         int curr = (((min*60)+sec)*1000);
         int nextint = trig - curr;
         int elapsed = PUBLISH_PERIOD - nextint;
-        lastPublish = now - (elapsed + 3500); //3500millis (3.5 secs) to adjust back a bit further
+        lastPublish = now - (elapsed + 1500); //1500millis (1.5 secs) to adjust back a bit further
         // delay(2000);
         // Particle.publish("rnd: ", String(rnd));
         // Particle.publish("trig: ", String(trig));
