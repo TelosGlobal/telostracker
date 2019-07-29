@@ -187,7 +187,7 @@ void setup() {
   // the nice thing about this code is you can have a timer0 interrupt go off
   // every 1 millisecond, and read data from the GPS for you. that makes the
   // loop code a heck of a lot easier!
-    useInterrupt(true);
+    useInterrupt(false);
 
     delay(1000);  
     
@@ -235,9 +235,6 @@ void useInterrupt(boolean v) {
   #endif
 }
 
-//uint32_t timer = millis();
-
-
 void loop() {
     
 // Check if unit is getting good power
@@ -264,12 +261,6 @@ void loop() {
     if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
       return;  // we can fail to parse a sentence in which case we should just wait for another
   }
-
-  // if millis() or timer wraps around, we'll just reset it
-//  if (timer > millis())  timer = millis();
-  
-
-//  delay(1000);
 
 // Populate GPS variables for publishing
     if (GPS.fix > fix) {
@@ -351,8 +342,6 @@ void loop() {
     temp4 = static_cast<int>(t4);
     hum4  = static_cast<int>(h4);
 
-
-
 if (millis() - lastPublish >= PUBLISH_PERIOD) {
 	lastPublish = millis();
     displayInfo();
@@ -382,13 +371,13 @@ if (Time.hour() == 0) {
 }    
 
 // Wait a second and do it again.
-delay(1000);
+// delay(1000);
 
 }
 
 void displayInfo()
 {
-    Particle.publish("Timestamp", Time.timeStr());
+
     Particle.publish("Power", String(pwr));
     Particle.publish("Vibration", String(vibr0));
     delay(2000);
@@ -417,7 +406,8 @@ void displayInfo()
     Particle.publish("Lat", String(lat)); 
     delay(2000); 
     Particle.publish("Altitude", String(altitude));
-    Particle.publish("Speed (Knots)", String(speed));     
+    Particle.publish("Speed (Knots)", String(speed));
+    Particle.publish("Timestamp", Time.timeStr());
 	
 	//Reset some variables
 	pwr = 0;
@@ -436,24 +426,13 @@ void displayInfo()
         int now = millis();
         int min = Time.minute();
         int sec = Time.second();
-        // Particle.publish("Timestamp: ", Time.timeStr());
-        // Particle.publish("millis: ", String(now));
         int rnd = (ceil((min*.1)+.05));
         int trig = (rnd*600000);
         int curr = (((min*60)+sec)*1000);
         int nextint = trig - curr;
         int elapsed = PUBLISH_PERIOD - nextint;
         lastPublish = now - (elapsed + 1500); //1500millis (1.5 secs) to adjust back a bit further
-        // delay(2000);
-        // Particle.publish("rnd: ", String(rnd));
-        // Particle.publish("trig: ", String(trig));
-        // delay(2000);
-        // Particle.publish("curr: ", String(curr));
-        // Particle.publish("nextint: ", String(nextint));
-        // delay(2000);
-        // Particle.publish("elapsed: ", String(elapsed));
-        // Particle.publish("new lastPub: ", String(lastPublish));
-        
+
         // One and done.
         issync = 1;
     }
@@ -466,47 +445,3 @@ long TP_init(){
     long measurement=pulseIn (TILT, HIGH);  //wait for the pin to get HIGH and returns measurement
     return measurement;
 }
-
-// ***************ADAFRUITGPS*********************
-// Based on: https://github.com/adafruit/Adafruit_GPS/blob/master/examples/GPS_HardwareSerial_Parsing/GPS_HardwareSerial_Parsing.ino
-
-// These are random examples of how to access the GPS data
-
-  // if millis() or timer wraps around, we'll just reset it
-//  if (timer > millis())  timer = millis();
-
-  // approximately every 2 seconds or so, print out the current stats
-//  if (millis() - timer > 60000) {
-//    timer = millis(); // reset the timer
-
-//    Serial.print("\nTime: ");
-//    Serial.print(GPS.hour, DEC); Serial.print(':');
-//    Serial.print(GPS.minute, DEC); Serial.print(':');
-//    Serial.print(GPS.seconds, DEC); Serial.print('.');
-//    Serial.println(GPS.milliseconds);
-//    Serial.print("Date: ");
-//    Serial.print(GPS.day, DEC); Serial.print('/');
-//    Serial.print(GPS.month, DEC); Serial.print("/20");
-//    Serial.println(GPS.year, DEC);
-//    Serial.print("Fix: "); Serial.print((int)GPS.fix);
-//    Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
-//    if (GPS.fix) {
-//      Serial.print("Location: ");
-//      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
-//      Serial.print(", ");
-//      Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
-//      Serial.print("Location (in degrees, works with Google Maps): ");
-//      Serial.print(GPS.latitudeDegrees, 4);
-//      Serial.print(", ");
-//      Serial.println(GPS.longitudeDegrees, 4);
-
-//      Serial.print("Speed (knots): "); Serial.println(GPS.speed);
-//      Serial.print("Angle: "); Serial.println(GPS.angle);
-//      Serial.print("Altitude: "); Serial.println(GPS.altitude);
-//      Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
-//      Particle.publish("Altitude", String(GPS.altitude));
-//      Particle.publish("Speed (knots)", String(GPS.speed));
-//      Particle.publish("Lat", String(GPS.latitude + GPS.lat));
-//      Particle.publish("Lon", String(GPS.longitude + GPS.lon));
-//    }
-//  }
