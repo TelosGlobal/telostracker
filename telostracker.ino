@@ -22,7 +22,6 @@
 // This is the temp sensor library
 #include <Adafruit_DHT_Particle.h>
 
-
 // Setup the 5 temp/humidity sensors
 #define DHTPIN0 C4     // Onboard sensor
 #define DHTPIN1 C5     // Sensor1
@@ -53,25 +52,27 @@ bool pwr  = 0;
 int vibr  = 0;
 int vibr0 = 0;
 int temp0 = 0;
-int hum0  = 0;
-int temp1 = 0;
-int hum1  = 0;
-int temp2 = 0;
-int hum2  = 0;
-int temp3 = 0;
-int hum3  = 0;
-int temp4 = 0;
-int hum4  = 0;
+double t0 = 0;
+double h0 = 0;
+double t1 = 0;
+double h1 = 0;
+double t2 = 0;
+double h2 = 0;
+double t3 = 0;
+double h3 = 0;
+double t4 = 0;
+double h4 = 0;
 int fix  = 0;
 int sats  = 0;
-int longitude = 0;
-int lon = 0;
-int latitude = 0;
-int lat = 0;
+double longitude = 0;
+//int lon = 0;
+double latitude = 0;
+//int lat = 0;
 int altitude = -1000;
 int speed = 0;
-String stamp;
-String location;
+//int t = 0;
+//String stamp;
+String telemetry;
 
 // Setup for interval publishing /////////////////////////////
 
@@ -115,27 +116,27 @@ void setup() {
 
 //  Register Cloud Variables with Particle Cloud
     Particle.variable("pwr", pwr);    
-    Particle.variable("stamp", stamp);
+//    Particle.variable("stamp", stamp);
     Particle.variable("vibr0", vibr0);
-    Particle.variable("temp0", temp0);
-    Particle.variable("hum0", hum0);
-    Particle.variable("temp1", temp1);
-    Particle.variable("hum1", hum1);
-    Particle.variable("temp2", temp2);
-    Particle.variable("hum2", hum2);
-    Particle.variable("temp3", temp3);
-    Particle.variable("hum3", hum3);
-    Particle.variable("temp4", temp4);
-    Particle.variable("hum4", hum4);
+    Particle.variable("t0", t0);
+    Particle.variable("h0", h0);
+    Particle.variable("t1", t1);
+    Particle.variable("h1", h1);
+    Particle.variable("t2", t2);
+    Particle.variable("h2", h2);
+    Particle.variable("t3", t3);
+    Particle.variable("h3", h3);
+    Particle.variable("t4", t4);
+    Particle.variable("h4", h4);
     Particle.variable("fix", fix);
     Particle.variable("sats", sats);
     Particle.variable("longitude", longitude);
-    Particle.variable("lon", lon);
+//    Particle.variable("lon", lon);
     Particle.variable("latitude", latitude);
-    Particle.variable("lat", lat);
+//    Particle.variable("lat", lat);
     Particle.variable("altitude", altitude);
     Particle.variable("speed", speed);
-    Particle.variable("location", location);
+    Particle.variable("telemetry", telemetry);
     
     // Force a connect to the Cloud
 //    if (Particle.connected() == false) {
@@ -265,35 +266,35 @@ void loop() {
   }
 
 // Populate GPS variables for publishing
-//    if (GPS.fix > fix) {
-//        fix = GPS.fix;
-//    }
-//    if (GPS.satellites > sats) {
-//        sats = GPS.satellites;
-//    }    
-//    if (GPS.latitude > latitude) {
-//        latitude = GPS.latitude;
-//    }
+    if (GPS.fix > fix) {
+        fix = GPS.fix;
+    }
+    if (GPS.satellites > sats) {
+        sats = GPS.satellites;
+    }    
+    if (GPS.latitudeDegrees != latitude) {
+        latitude = GPS.latitudeDegrees;
+    }
 //    if (GPS.lat > lat) {
 //        lat = GPS.lat;
 //    }
-//    if (GPS.longitude > longitude) {
-//        longitude = GPS.longitude;
-//    }
+    if (GPS.longitudeDegrees != longitude) {
+        longitude = GPS.longitudeDegrees;
+    }
 //    if (GPS.lon > lon) {
 //        lon = GPS.lon;
 //    }
-//    if (GPS.altitude > altitude) {
-//        altitude = GPS.altitude;
-//    }
-//    if (GPS.speed > speed) {
-//        speed = GPS.speed;
-//    }
+    if (GPS.altitude > altitude) {
+        altitude = GPS.altitude;
+    }
+    if (GPS.speed > speed) {
+        speed = GPS.speed;
+    }
 
 //  Read tilt sensor
     long measurement =TP_init();
     delay(50);
-    stamp = Time.timeStr();
+//    stamp = Time.timeStr();
     vibr  = static_cast<int>(measurement);
     if (vibr > vibr0) {
         vibr0 = vibr;
@@ -302,47 +303,37 @@ void loop() {
 // CHECK SENSOR0
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    float h0 = dht0.getHumidity();
+    h0 = dht0.getHumidity();
     // Read temperature as Celsius
-    float t0 = dht0.getTempCelcius();
-    temp0 = static_cast<int>(t0);
-    hum0  = static_cast<int>(h0);
+    t0 = dht0.getTempCelcius();
 
 // CHECK SENSOR1
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    float h1 = dht1.getHumidity();
+    h1 = dht1.getHumidity();
     // Read temperature as Celsius
-    float t1 = dht1.getTempCelcius();
-    temp1 = static_cast<int>(t1);
-    hum1  = static_cast<int>(h1);
+    t1 = dht1.getTempCelcius();
 
 // CHECK SENSOR2
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    float h2 = dht2.getHumidity();
+    h2 = dht2.getHumidity();
     // Read temperature as Celsius
-    float t2 = dht2.getTempCelcius();
-    temp2 = static_cast<int>(t2);
-    hum2  = static_cast<int>(h2);
+    t2 = dht2.getTempCelcius();
   
 // CHECK SENSOR3
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    float h3 = dht3.getHumidity();
+    h3 = dht3.getHumidity();
     // Read temperature as Celsius
-    float t3 = dht3.getTempCelcius();
-    temp3 = static_cast<int>(t3);
-    hum3  = static_cast<int>(h3);
+    t3 = dht3.getTempCelcius();
 
 // CHECK SENSOR4
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    float h4 = dht4.getHumidity();
+    h4 = dht4.getHumidity();
     // Read temperature as Celsius
-    float t4 = dht4.getTempCelcius();
-    temp4 = static_cast<int>(t4);
-    hum4  = static_cast<int>(h4);
+    t4 = dht4.getTempCelcius();
 
 if (millis() - lastPublish >= PUBLISH_PERIOD) {
 	lastPublish = millis();
@@ -373,63 +364,30 @@ if (Time.hour() == 0) {
 }    
 
 // Wait a second and do it again.
-// delay(1000);
+delay(1000);
 
 }
 
 void displayInfo()
 {
 
-    Particle.publish("Power", String(pwr));
-    Particle.publish("Vibration", String(vibr0));
-    delay(2000);
-    Particle.publish("Hum0", String(hum0));
-    Particle.publish("Temp0", String(temp0));
-    delay(2000);
-    Particle.publish("Hum1", String(hum1));
-    Particle.publish("Temp1", String(temp1));
-    delay(2000);  
-    Particle.publish("Hum2", String(hum2));
-    Particle.publish("Temp2", String(temp2));
-    delay(2000);  
-    Particle.publish("Hum3", String(hum3));
-    Particle.publish("Temp3", String(temp3));
-    delay(2000); 
-    Particle.publish("Hum4", String(hum4));
-    Particle.publish("Temp4", String(temp4)); 
-    delay(2000);
-    Particle.publish("GPSfix", String(GPS.fix));
-    Particle.publish("SATs", String(GPS.satellites));
-    delay(2000); 
-    //Particle.publish("Lat", String(GPS.latitude + ));
-    //Particle.publish("Lon", String(GPS.longitude + GPS.lon));
-    Particle.publish("Latitude", String(GPS.latitude));
-    Particle.publish("Lat", String(GPS.lat)); 
-    delay(2000); 
-    Particle.publish("Longitude", String(GPS.longitude));
-    Particle.publish("Lon", String(GPS.lon));
-    delay(2000); 
-    Particle.publish("Altitude", String(GPS.altitude));
-    Particle.publish("Speed (Knots)", String(GPS.speed));
-    Particle.publish("Timestamp", Time.timeStr());
-	
-    String location = String::format(
-    "{\"LAT\":%f, \"LON\":%f}",
-    GPS.latitudeDegrees, GPS.longitudeDegrees);	
-    Particle.publish("Location", String(location));
+    // Get time now in epoch
+    int numOfSecond = Time.local();
+
+    String telemetry = String::format(
+    "{\"ts\":%i, \"fix\":%i, \"sats\":%i, \"lat\":%.4f, \"lng\":%.4f, \"atl\":%.1f, \"spd\":%.1f, \"temps\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"humds\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"vib\":%i,\"pwr\":%i}",
+    numOfSecond, fix, sats, GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.altitude, GPS.speed,
+    t0, t1, t2, t3, t4, h0, h1, h2, h3, h4, vibr0, pwr);	
+    Particle.publish("Telemetry", String(telemetry));
 	
 	//Reset some variables
 	pwr = 0;
-	fix = 0;
-	sats = 0;
 	vibr0 = 0;
-	longitude = 0;
-    lon = 0;
-    latitude = 0;
-    lat = 0;
-    altitude = -1000;
-    speed = 0;   
-	
+	fix = 0;
+	sats =0;
+	speed=0;
+	altitude = -1000;
+ 
     //This section will sync up the intervals to 10 minutes on the hour  
     if (issync == 0) {  
         int now = millis();
