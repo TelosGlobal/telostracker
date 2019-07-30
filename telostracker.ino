@@ -2,7 +2,7 @@
 // *            TelosTracker                               *
 // *                                                       *
 // *     Author: Kevin Quaintance                          *
-// *     Date:   7/25/2019                                 *
+// *     Date:   7/30/2019                                 *
 // *                                                       *
 // *     This script works with Particle Electron cellular *
 // *     2G world microcontroller (arduino based).         *
@@ -65,13 +65,9 @@ double h4 = 0;
 int fix  = 0;
 int sats  = 0;
 double longitude = 0;
-//int lon = 0;
 double latitude = 0;
-//int lat = 0;
 int altitude = -1000;
 int speed = 0;
-//int t = 0;
-//String stamp;
 String telemetry;
 
 // Setup for interval publishing /////////////////////////////
@@ -94,9 +90,6 @@ int issync = 0;
 USARTSerial& mySerial = Serial1;
 #endif
 
-// what's the name of the hardware serial port?
-//HardwareSerial mySerial Serial1;
-
 // Connect to the GPS on the hardware port
 Adafruit_GPS GPS(&mySerial);
 
@@ -116,7 +109,6 @@ void setup() {
 
 //  Register Cloud Variables with Particle Cloud
     Particle.variable("pwr", pwr);    
-//    Particle.variable("stamp", stamp);
     Particle.variable("vibr0", vibr0);
     Particle.variable("t0", t0);
     Particle.variable("h0", h0);
@@ -131,26 +123,14 @@ void setup() {
     Particle.variable("fix", fix);
     Particle.variable("sats", sats);
     Particle.variable("longitude", longitude);
-//    Particle.variable("lon", lon);
     Particle.variable("latitude", latitude);
-//    Particle.variable("lat", lat);
     Particle.variable("altitude", altitude);
     Particle.variable("speed", speed);
     Particle.variable("telemetry", telemetry);
     
-    // Force a connect to the Cloud
-//    if (Particle.connected() == false) {
-//       Particle.connect();
-//    }
-        
     // Common-anode RGB LED connected to (R), (G), (B)
     RGB.mirrorTo(B3, B2, B1, true, true);
 
-    // We open up a serial port to monitor the sensor values
-    //Serial.begin(9600); 
-    //Serial.println("TelosTracker Initializing...");
-    Particle.publish("TelosTracker Initializing...", Time.timeStr());
-    
     // Initiate Temp sensors
     dht0.begin();
     dht1.begin();
@@ -167,8 +147,8 @@ void setup() {
     delay(1000);
 
     //# request a HOT RESTART, in case we were in standby mode before.
-//    GPS.sendCommand("$PMTK101*32");
-//    delay(1000);
+    GPS.sendCommand("$PMTK101*32");
+    delay(1000);
     
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -192,10 +172,10 @@ void setup() {
   // loop code a heck of a lot easier!
     useInterrupt(false);
 
+    // Publish init state
+    Particle.publish("TelosTracker Initializing...", Time.timeStr());
     delay(1000);  
     
-      // Ask for firmware version
-//    mySerial.println(PMTK_Q_RELEASE);
 }
 
 // Interrupt is called once a millisecond, looks for any new GPS data, and stores it
@@ -335,6 +315,7 @@ void loop() {
     // Read temperature as Celsius
     t4 = dht4.getTempCelcius();
 
+//If our interval is met, let's go publish the data
 if (millis() - lastPublish >= PUBLISH_PERIOD) {
 	lastPublish = millis();
     displayInfo();
@@ -356,6 +337,9 @@ if (Time.hour() == 0) {
             //Publish daily vitals
             Particle.publishVitals(); 
             
+            //Let's reset the GPS module for grins
+            GPS.sendCommand("$PMTK101*32");
+            
             //  Let's trigger a resync of the publishing
             issync = 0;
             delay(2000);
@@ -368,6 +352,13 @@ delay(1000);
 
 }
 
+// This will pull the vibration data from the sensor
+long TP_init(){
+    delay(10);
+    long measurement=pulseIn (TILT, HIGH);  //wait for the pin to get HIGH and returns measurement
+    return measurement;
+}
+
 void displayInfo()
 {
 
@@ -375,12 +366,13 @@ void displayInfo()
     int numOfSecond = Time.local();
 
     String telemetry = String::format(
-    "{\"ts\":%i, \"fix\":%i, \"sats\":%i, \"lat\":%.4f, \"lng\":%.4f, \"atl\":%.1f, \"spd\":%.1f, \"temps\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"humds\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"vib\":%i,\"pwr\":%i}",
+    "{\"ts\":%i, \"fix\":%i, \"sats\":%i, \"lat\":%g, \"lng\":%g, \"atl\":%.1f, \"spd\":%.1f, \"temps\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"humds\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"vib\":%i,\"pwr\":%i}",
     numOfSecond, fix, sats, GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.altitude, GPS.speed,
-    t0, t1, t2, t3, t4, h0, h1, h2, h3, h4, vibr0, pwr);	
+    t0, t1, t2, t3, t4, h0, h1, h2, h3, h4, vibr0, pwr);
+    
     Particle.publish("Telemetry", String(telemetry));
 	
-	//Reset some variables
+	//Reset some variables to ensure our data updates aren't stale
 	pwr = 0;
 	vibr0 = 0;
 	fix = 0;
@@ -388,7 +380,7 @@ void displayInfo()
 	speed=0;
 	altitude = -1000;
  
-    //This section will sync up the intervals to 10 minutes on the hour  
+    //This section will sync up the intervals to 10 minutes on the hour  (kinda works)
     if (issync == 0) {  
         int now = millis();
         int min = Time.minute();
@@ -405,10 +397,3 @@ void displayInfo()
     }
   
 }    
-
-// This will pull the vibration data from the sensor
-long TP_init(){
-    delay(10);
-    long measurement=pulseIn (TILT, HIGH);  //wait for the pin to get HIGH and returns measurement
-    return measurement;
-}
