@@ -74,9 +74,9 @@ String telemetry;
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 600000; 
+const unsigned long PUBLISH_PERIOD = 598000; // 2 seconds less than 10mins helps with slips 
 // force lastPublish to trigger immediately when loop starts
-long int lastPublish = -600000;
+long int lastPublish = -598000;
 
 //This invokes a routine that attempts to sync the interval to 
 //trigger when the time hits 10 minute increments.  It runs
@@ -366,7 +366,9 @@ void displayInfo()
     int numOfSecond = Time.local();
 
     String telemetry = String::format(
-    "{\"ts\":%i, \"fix\":%i, \"sats\":%i, \"lat\":%g, \"lng\":%g, \"atl\":%.1f, \"spd\":%.1f, \"temps\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"humds\": [%.1f,%.1f,%.1f,%.1f,%.1f],\"vib\":%i,\"pwr\":%i}",
+    "{\"ts\":%i, \"fix\":%i, \"sats\":%i, \"lat\":%g, \"lng\":%g, \"atl\":%.1f, \"spd\":%.1f, "
+    "\"t0\":%.1f, \"t1\":%.1f, \"t2\":%.1f, \"t3\":%.1f, \"t4\":%.1f, \"h0\":%.1f, \"h1\":%.1f,"
+    "\"h2\":%.1f, \"h3\":%.1f, \"h4\":%.1f, \"vib\":%i, \"pwr\":%i}",
     numOfSecond, fix, sats, GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.altitude, GPS.speed,
     t0, t1, t2, t3, t4, h0, h1, h2, h3, h4, vibr0, pwr);
     
