@@ -22,6 +22,8 @@
 // This is the temp sensor library
 #include <Adafruit_DHT_Particle.h>
 
+#include <math.h>
+
 // Setup the 5 temp/humidity sensors
 #define DHTPIN0 C4     // Onboard sensor
 #define DHTPIN1 C5     // Sensor1
@@ -69,14 +71,15 @@ double latitude = 0;
 int altitude = -1000;
 int speed = 0;
 String telemetry;
+int ransync = 1;
 
 // Setup for interval publishing /////////////////////////////
 
 void displayInfo(); // forward declaration
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 598000; // 2 seconds less than 10mins helps with slips 
+const unsigned long PUBLISH_PERIOD = 590000; // 5 seconds less than 10mins helps with slips 
 // force lastPublish to trigger immediately when loop starts
-long int lastPublish = -598000;
+long int lastPublish = -590000;
 
 //This invokes a routine that attempts to sync the interval to 
 //trigger when the time hits 10 minute increments.  It runs
@@ -127,6 +130,7 @@ void setup() {
     Particle.variable("altitude", altitude);
     Particle.variable("speed", speed);
     Particle.variable("telemetry", telemetry);
+    Particle.variable("ransync", ransync);
     
     // Common-anode RGB LED connected to (R), (G), (B)
     RGB.mirrorTo(B3, B2, B1, true, true);
@@ -286,20 +290,23 @@ void loop() {
     h0 = dht0.getHumidity();
     // Read temperature as Celsius
     t0 = dht0.getTempCelcius();
-
+    delay(2000);
+    
 // CHECK SENSOR1
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
     h1 = dht1.getHumidity();
     // Read temperature as Celsius
     t1 = dht1.getTempCelcius();
-
+    delay(2000);
+    
 // CHECK SENSOR2
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
     h2 = dht2.getHumidity();
     // Read temperature as Celsius
     t2 = dht2.getTempCelcius();
+    delay(2000);
   
 // CHECK SENSOR3
     // Reading temperature or humidity takes about 250 milliseconds!
@@ -307,6 +314,7 @@ void loop() {
     h3 = dht3.getHumidity();
     // Read temperature as Celsius
     t3 = dht3.getTempCelcius();
+    delay(2000);
 
 // CHECK SENSOR4
     // Reading temperature or humidity takes about 250 milliseconds!
@@ -314,6 +322,8 @@ void loop() {
     h4 = dht4.getHumidity();
     // Read temperature as Celsius
     t4 = dht4.getTempCelcius();
+    
+    delay(2000);
 
 //If our interval is met, let's go publish the data
 if (millis() - lastPublish >= PUBLISH_PERIOD) {
@@ -348,7 +358,7 @@ if (Time.hour() == 0) {
 }    
 
 // Wait a second and do it again.
-delay(1000);
+//delay(1000);
 
 }
 
@@ -373,6 +383,22 @@ void displayInfo()
     t0, t1, t2, t3, t4, h0, h1, h2, h3, h4, vibr0, pwr);
     
     Particle.publish("Telemetry", String(telemetry));
+    delay(2000);
+	Particle.publish("t0", String(t0));
+	Particle.publish("t1", String(t1));
+    delay(2000);
+	Particle.publish("t2", String(t2));
+	Particle.publish("t3", String(t3));
+    delay(2000);
+    Particle.publish("t4", String(t4));
+	Particle.publish("h0", String(h0));
+    delay(2000);
+    Particle.publish("h1", String(h1));
+	Particle.publish("h2", String(h2));
+    delay(2000);
+    Particle.publish("h3", String(h3));
+	Particle.publish("h4", String(h4));
+
 	
 	//Reset some variables to ensure our data updates aren't stale
 	pwr = 0;
@@ -393,7 +419,7 @@ void displayInfo()
         int nextint = trig - curr;
         int elapsed = PUBLISH_PERIOD - nextint;
         lastPublish = now - (elapsed + 1500); //1500millis (1.5 secs) to adjust back a bit further
-
+        Particle.publish("ransync", String(ransync));
         // One and done.
         issync = 1;
     }
