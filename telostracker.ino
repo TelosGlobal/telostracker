@@ -87,9 +87,9 @@ void displayInfo(); // forward declaration
 
 
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 590000; // 5 seconds less than 10mins helps with slips 
+const unsigned long PUBLISH_PERIOD = 593000; // 7 seconds less than 10mins helps with slips 
 // force lastPublish to trigger immediately when loop starts
-long int lastPublish = -590000;
+long int lastPublish = -593000;
 
 //This invokes a routine that attempts to sync the interval to 
 //trigger when the time hits 10 minute increments.  It runs
@@ -495,21 +495,21 @@ void displayInfo()
     t0, t1, t2, t3, t4, h0, h1, h2, h3, h4, vibr0, pwr);
     
     Particle.publish("Telemetry", String(telemetry));
-    delay(2000);
-	Particle.publish("t0", String(t0));
-	Particle.publish("t1", String(t1));
-    delay(2000);
-	Particle.publish("t2", String(t2));
-	Particle.publish("t3", String(t3));
-    delay(2000);
-    Particle.publish("t4", String(t4));
-	Particle.publish("h0", String(h0));
-    delay(2000);
-    Particle.publish("h1", String(h1));
-	Particle.publish("h2", String(h2));
-    delay(2000);
-    Particle.publish("h3", String(h3));
-	Particle.publish("h4", String(h4));
+    //delay(2000);
+	//Particle.publish("t0", String(t0));
+	//Particle.publish("t1", String(t1));
+    //delay(2000);
+	//Particle.publish("t2", String(t2));
+	//Particle.publish("t3", String(t3));
+    //delay(2000);
+    //Particle.publish("t4", String(t4));
+	//Particle.publish("h0", String(h0));
+    //delay(2000);
+    //Particle.publish("h1", String(h1));
+	//Particle.publish("h2", String(h2));
+    //delay(2000);
+    //Particle.publish("h3", String(h3));
+	//Particle.publish("h4", String(h4));
 
 	
 	//Reset some variables to ensure our data updates aren't stale
