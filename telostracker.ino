@@ -54,6 +54,8 @@ bool pwr  = 0;
 int vibr  = 0;
 int vibr0 = 0;
 int temp0 = 0;
+double t = 0;
+double h = 0;
 double t0 = 0;
 double h0 = 0;
 double t1 = 0;
@@ -73,9 +75,17 @@ int speed = 0;
 String telemetry;
 int ransync = 1;
 
+//String DHT[] = {"dht0", "dht1", "dht2", "dht3", "dht4"};
+//int temps[] = {t0,t1,t2,t3,t4};
+//int humds[] = {h0,h1,h2,h3,h4};
+//int count = arraySize(temps);
+
+
 // Setup for interval publishing /////////////////////////////
 
 void displayInfo(); // forward declaration
+
+
 // Target is every 10 minutes(in milliseconds)
 const unsigned long PUBLISH_PERIOD = 590000; // 5 seconds less than 10mins helps with slips 
 // force lastPublish to trigger immediately when loop starts
@@ -284,47 +294,149 @@ void loop() {
         vibr0 = vibr;
     }
 
-// CHECK SENSOR0
+    // CHECK SENSORS
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    h0 = dht0.getHumidity();
-    // Read temperature as Celsius
-    t0 = dht0.getTempCelcius();
+    h = dht0.getHumidity();
     delay(2000);
+    if (isnan(h)) {
+        h0 = -999.000;
+    }
+    else if (h0 < h) {
+        h0 = h;
+    }
+    else {
+    }
+    // Read temperature as Celsius
+    t = dht0.getTempCelcius();
+    if (isnan(t)) {
+        t0 = -999.000;
+    }
+    else if (t0 < t) {
+        t0 = t;
+    }
+    else {
+    }
+
+
     
 // CHECK SENSOR1
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    h1 = dht1.getHumidity();
+//    h1 = dht1.getHumidity();
     // Read temperature as Celsius
-    t1 = dht1.getTempCelcius();
+//    t1 = dht1.getTempCelcius();
+//    delay(2000);
+    h = dht1.getHumidity();
     delay(2000);
+    if (isnan(h)) {
+        h1 = -999.000;
+    }
+    else if (h1 < h) {
+        h1 = h;
+    }
+    else {
+    }
+    // Read temperature as Celsius
+    t = dht1.getTempCelcius();
+    if (isnan(t)) {
+        t1 = -999.000;
+    }
+    else if (t1 < t) {
+        t1 = t;
+    }
+    else {
+    }
+
     
 // CHECK SENSOR2
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    h2 = dht2.getHumidity();
+//    h2 = dht2.getHumidity();
     // Read temperature as Celsius
-    t2 = dht2.getTempCelcius();
+//    t2 = dht2.getTempCelcius();
+//    delay(2000);
+    h = dht2.getHumidity();
     delay(2000);
+    if (isnan(h)) {
+        h2 = -999.000;
+    }
+    else if (h2 < h) {
+        h2 = h;
+    }
+    else {
+    }
+    // Read temperature as Celsius
+    t = dht2.getTempCelcius();
+    if (isnan(t)) {
+        t2 = -999.000;
+    }
+    else if (t2 < t) {
+        t2 = t;
+    }
+    else {
+    }
+
+    
   
 // CHECK SENSOR3
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    h3 = dht3.getHumidity();
+//    h3 = dht3.getHumidity();
     // Read temperature as Celsius
-    t3 = dht3.getTempCelcius();
+//    t3 = dht3.getTempCelcius();
+//    delay(2000);
+    h = dht3.getHumidity();
     delay(2000);
+    if (isnan(h)) {
+        h3 = -999.000;
+    }
+    else if (h3 < h) {
+        h3 = h;
+    }
+    else {
+    }
+    // Read temperature as Celsius
+    t = dht3.getTempCelcius();
+    if (isnan(t)) {
+        t3 = -999.000;
+    }
+    else if (t3 < t) {
+        t3 = t;
+    }
+    else {
+    }
+
 
 // CHECK SENSOR4
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 
-    h4 = dht4.getHumidity();
+//    h4 = dht4.getHumidity();
     // Read temperature as Celsius
-    t4 = dht4.getTempCelcius();
-    
+//    t4 = dht4.getTempCelcius();
+//    delay(2000);
+    h = dht4.getHumidity();
     delay(2000);
+    if (isnan(h)) {
+        h4 = -999.000;
+    }
+    else if (h4 < h) {
+        h4 = h;
+    }
+    else {
+    }
+    // Read temperature as Celsius
+    t = dht4.getTempCelcius();
+    if (isnan(t)) {
+        t4 = -999.000;
+    }
+    else if (t4 < t) {
+        t4 = t;
+    }
+    else {
+    }
 
+    
 //If our interval is met, let's go publish the data
 if (millis() - lastPublish >= PUBLISH_PERIOD) {
 	lastPublish = millis();
@@ -332,9 +444,9 @@ if (millis() - lastPublish >= PUBLISH_PERIOD) {
 }
 
 // Let's sync time with the Cloud (via cellular) if connected at 00:55:55am UTC
-if (Time.hour() == 0) {
-    if (Time.minute() == 52) {
-        if (Time.second() == 55) {
+if (Time.hour() == 1) {
+    if (Time.minute() == 57) {
+        if (Time.second() > 30 && Time.second() <59) {
             if (!Particle.connected()) {
                 Particle.connect();
             }
@@ -407,6 +519,19 @@ void displayInfo()
 	sats =0;
 	speed=0;
 	altitude = -1000;
+	t = 0;
+	h = 0;
+	t0 = 0;
+	h0 = 0;
+	t1 = 0;
+	h1 = 0;
+	t2 = 0;
+	h2 = 0;
+	t3 = 0;
+	h3 = 0;
+	t4 = 0;
+	h4 = 0;
+	
  
     //This section will sync up the intervals to 10 minutes on the hour  (kinda works)
     if (issync == 0) {  
