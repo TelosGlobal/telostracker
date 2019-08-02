@@ -87,9 +87,9 @@ void displayInfo(); // forward declaration
 
 
 // Target is every 10 minutes(in milliseconds)
-const unsigned long PUBLISH_PERIOD = 593000; // 7 seconds less than 10mins helps with slips 
+const unsigned long PUBLISH_PERIOD = 591000; // 9 seconds less than 10mins helps with slips 
 // force lastPublish to trigger immediately when loop starts
-long int lastPublish = -593000;
+long int lastPublish = -591000;
 
 //This invokes a routine that attempts to sync the interval to 
 //trigger when the time hits 10 minute increments.  It runs
